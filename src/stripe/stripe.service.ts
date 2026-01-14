@@ -5,6 +5,8 @@ import Stripe from 'stripe';
 export class StripeService {
     constructor(@Inject('STRIPE') private stripe: Stripe) { }
 
+    // await stripe.paymentIntents.cancel(paymentIntentId);
+
     async createVendorAccount(vendorEmail: string) {
         const account = await this.stripe.accounts.create({
             type: 'express',

@@ -71,10 +71,9 @@ model Job {
   estimitedBudget                     String
   jobStatus                           JobStatus        @default(OPEN)
   paymentStatus                       JobPaymentStatus @default(UNPAID)
-  paymentId                           String?          @unique
   // Relations
   bids                                Bid[]
-  payment                             Payment?         @relation(fields: [paymentId], references: [paymentId])
+  payment                             Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,11 +109,14 @@ model Message {
 }
 
 model Payment {
-  paymentId String @id @default(uuid())
-  amount    Int
-  userId    String
-  user      User   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  job       Job?   @relation
+  paymentId       String        @id @default(uuid())
+  amount          Int
+  userId          String
+  status          paymentStatus @default(UNPAID)
+  stripePaymentId String
+  jobId           String        
+  user            User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  job             Job           @relation(fields: [jobId], references: [jobId], onDelete: Cascade)
 }
 
 model Nitification {
@@ -163,4 +165,11 @@ enum BidStatus {
   ACCEPTED
   DECLINED
   PENDING_REVIEW
+}
+
+enum paymentStatus {
+  PAID
+  UNPAID
+  CANCEL
+  REFUND
 }
