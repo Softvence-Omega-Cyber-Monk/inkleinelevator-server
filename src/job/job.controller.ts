@@ -13,6 +13,7 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiBody,
+  ApiOperation,
 } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
@@ -92,5 +93,28 @@ export class JobController {
     });
 
     return this.jobService.createJob(userId, dto, photos, documents);
+  };
+
+
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @Post("get-all-job")
+  @ApiOperation({
+    summary: "Get All Job"
+  })
+  async getAllJOb() {
+    const result = await this.jobService.getAllJob();
+
+
+    return {
+      success: true,
+      message: "All Job Retrived Successfully",
+      data: result
+    }
+
   }
+
+
+  
+
 }

@@ -2,11 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
 import { ValidationPipe } from '@nestjs/common';
-import { json, urlencoded } from 'express';
+import { urlencoded } from 'express';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   app.useGlobalPipes(new ValidationPipe());
 
@@ -31,16 +33,14 @@ async function bootstrap() {
     }),
   );
 
-  // Increase payload size limit for file uploads
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ limit: '50mb', extended: true }));
+
 
 
   const config = new DocumentBuilder()
-    .setTitle("Inkleinventor Full Api Docs")
+    .setTitle("Inkleinventor Backend Development Use Nest & Prisma")
     .setDescription("Inkleinventor Api Description")
     .setVersion("1.0")
-    .addTag("Inkleinventor Backend Development Use Nest.js")
+    // .addTag("Inkleinventor Backend Development Use Nest.js")
 
     .addBearerAuth()
     .build();
@@ -57,6 +57,8 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
+  app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+
 
   const port = process.env.PORT || 3000;
 
@@ -65,11 +67,11 @@ async function bootstrap() {
   console.log(`
     ╔═══════════════════════════════════════════════════════╗
     ║                                                       ║
-    ║   🚀 Inkleinventor API is running!                    ║
+    ║   🚀 Inkleinventor API is running!                   ║
     ║                                                       ║
     ║   📡 Server: http://localhost:${port}                ║
     ║   📚 Swagger: http://localhost:${port}/docs          ║
-    ║   🔌 WebSocket: ws://localhost:${port}/notifications ║
+    ║   🔌 WebSocket: ws://localhost:${port}/notifications  ║
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
   `);

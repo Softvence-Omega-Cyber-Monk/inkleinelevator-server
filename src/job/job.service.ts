@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateJobDto } from './dto/create.job.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -10,7 +10,7 @@ export class JobService {
         private cloudinaryService: CloudinaryService,
     ) { }
 
-    async createJob( userId: string, dto: CreateJobDto, photos: Express.Multer.File[], documents: Express.Multer.File[]) {
+    async createJob(userId: string, dto: CreateJobDto, photos: Express.Multer.File[], documents: Express.Multer.File[]) {
         const photoUrls: string[] = [];
         const documentUrls: string[] = [];
 
@@ -55,4 +55,19 @@ export class JobService {
         });
 
     }
+
+    async getAllJob() {
+        const result = await this.prisma.job.findMany({
+            where: {
+                paymentStatus: "PAID",
+                jobStatus: "OPEN"
+            }
+        });
+
+        if (!result) throw new NotFoundException("No Paind Open Job Dos't Available");
+
+        return result;
+
+    }
+
 }
