@@ -20,14 +20,14 @@ export class StripeService {
         return account.id;
     }
 
-  
+
     async holdPayment(amount: number, customerId?: string) {
         const paymentIntent = await this.stripe.paymentIntents.create({
-            amount, 
+            amount,
             currency: 'usd',
             customer: customerId,
             payment_method_types: ['card'],
-            capture_method: 'manual', 
+            capture_method: 'manual',
         });
         return paymentIntent.id;
     }
@@ -39,7 +39,7 @@ export class StripeService {
 
 
     async releasePayment(vendorStripeAccountId: string, totalAmount: number) {
-        const adminFee = Math.floor(totalAmount * 0.10); 
+        const adminFee = Math.floor(totalAmount * 0.10);
         const vendorAmount = totalAmount - adminFee;
 
         const transfer = await this.stripe.transfers.create({
@@ -49,5 +49,20 @@ export class StripeService {
         });
 
         return transfer;
-    }
+    };
+
+    // const transfer = await this.stripe.transfers.create({
+    //     amount: vendorAmount * 100, // cents
+    //     currency: "usd",
+    //     destination: vendorStripeAccountId,
+    //     source_transaction: paymentIntent.id
+    // });
+
+    //     if(refundAmount > 0){
+    //     const refund = await this.stripe.refunds.create({
+    //         payment_intent: paymentIntent.id,
+    //         amount: refundAmount * 100, // cents
+    //     });
+    // }
+
 }

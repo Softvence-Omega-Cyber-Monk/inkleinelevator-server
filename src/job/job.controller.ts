@@ -8,6 +8,9 @@ import {
   UploadedFiles,
   BadRequestException,
   Get,
+  Query,
+  Param,
+  Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -101,7 +104,7 @@ export class JobController {
   @ApiBearerAuth()
   @Get("get-all-job")
   @ApiOperation({
-    summary: "Get All Job"
+    summary: "get all job"
   })
   async getAllJOb() {
     const result = await this.jobService.getAllJob();
@@ -119,7 +122,7 @@ export class JobController {
   @ApiBearerAuth()
   @Get("get-myJob")
   @ApiOperation({
-    summary: "Get My All Job"
+    summary: "Get my all job"
   })
   async getMyAllJob(@Req() req: any) {
     const userId = req.user.userId;
@@ -129,6 +132,42 @@ export class JobController {
     return {
       success: true,
       message: "My all job retrived successfully!",
+      data: result
+    }
+
+  }
+
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @Get("get-single-job/:jobId")
+  @ApiOperation({
+    summary: "get Single Job"
+  })
+  async getSingleJOb(@Param("jobId") jobId: string) {
+    const result = await this.jobService.getSingleJobs(jobId);
+
+    return {
+      success: true,
+      message: "Retrive Single Job",
+      data: result
+    }
+  };
+
+
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @Patch("job-ready-for-review/:jobId")
+  @ApiOperation({
+    summary: "Only For Elevator Update Job Status (PENDING_REVIEW)"
+  })
+  async jobReadyForReview(@Param("jobId") jobId: string, @Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.jobService.pendingReview(jobId, userId);
+
+    return {
+      success: true,
+      message: "Job Complited Request Sent By Job Admin",
       data: result
     }
 

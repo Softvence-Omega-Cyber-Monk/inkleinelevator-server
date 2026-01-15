@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateJobDto } from './dto/create.job.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -79,6 +79,67 @@ export class JobService {
         });
 
         return result
+    };
+
+
+    async getSingleJobs(jobId: string) {
+        const findJob = await this.prisma.job.findUnique({
+            where: {
+                jobId,
+            },
+            include: {
+                bids: true,
+                _count: { select: { bids: true } }
+            },
+        });
+
+        if (!findJob) throw new NotFoundException("Job Not Found");
+
+        return {
+            totalBid: findJob._count.bids,
+            ...findJob
+        }
+
+    }
+
+    async pendingReview(jobId: string, elevatorUserId: string) {
+        const findJob = await this.prisma.job.findFirst({
+            where: {
+                jobId: jobId,
+            },
+            include: {
+                bids: true
+            }
+        });
+        
+        if (!findJob) {
+            throw new Error("Job not found");
+        }
+
+        if (findJob?.jobStatus !== "INPROGRESS") throw new HttpException("This job is not yet ready for review. Only jobs that are currently in progress can be submitted for review.", 400)
+
+
+
+        const acceptedBid = findJob.bids.find((bid) =>
+            bid.userId === elevatorUserId &&
+            bid.status === "ACCEPTED"
+        );
+
+        if (!acceptedBid) {
+            throw new Error("You are not permitted to access this route");
+        }
+
+        await this.prisma.job.update({
+            where: {
+                jobId: jobId
+            },
+            data: {
+                jobStatus: "PENDING_REVIEW"
+            }
+        });
+
+        return null;
+
     }
 
 }

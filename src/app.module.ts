@@ -9,11 +9,12 @@ import { CloudinaryProvider } from './config/CloudinaryProvider';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentModule } from './payment/payment.module';
+import { BidModule } from './bid/bid.module';
 
 @Module({
   imports: [PrismaModule, ConfigModule.forRoot({
     isGlobal: true
-  }), AuthModule, JobModule, CloudinaryModule, StripeModule, PaymentModule],
+  }), AuthModule, JobModule, CloudinaryModule, StripeModule, PaymentModule, BidModule],
   controllers: [AppController],
   providers: [AppService, CloudinaryProvider],
   exports: ["CLOUDINARY"]

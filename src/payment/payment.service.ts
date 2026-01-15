@@ -31,8 +31,7 @@ export class PaymentService {
                 amount: amount,
                 userId: userId,
                 stripePaymentId: paymentIntent.id,
-                jobId: jobId,
-                status: 'UNPAID'
+                jobId: jobId
             }
         });
 
