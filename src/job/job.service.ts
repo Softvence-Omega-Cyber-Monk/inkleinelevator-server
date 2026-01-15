@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateJobDto } from './dto/create.job.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -75,6 +75,9 @@ export class JobService {
         const result = await this.prisma.job.findMany({
             where: {
                 userId: userId
+            },
+            include: {
+                bids: true
             }
         });
 
@@ -111,7 +114,7 @@ export class JobService {
                 bids: true
             }
         });
-        
+
         if (!findJob) {
             throw new Error("Job not found");
         }
@@ -139,6 +142,38 @@ export class JobService {
         });
 
         return null;
+
+    }
+
+    async compliteRequest(userId: string, jobId: string) {
+        const result = await this.prisma.job.findFirst({
+            where: {
+                jobId: jobId
+            }
+        });
+
+        if (!result) throw new NotFoundException("Job not found");
+
+        if (result.userId !== userId) throw new NotAcceptableException("You are not permited for this route");
+        console.log("Curent Job Status", result.jobStatus);
+        const allowedStatuses = ["INPROGRESS", "PENDING_REVIEW"];
+
+        if (!allowedStatuses.includes(result.jobStatus)) {
+            throw new BadRequestException(
+                `Job cannot be completed from status: ${result.jobStatus}`
+            );
+        }
+
+        const data = await this.prisma.job.update({
+            where: {
+                jobId: jobId
+            },
+            data: {
+                jobStatus: "COMPLITE"
+            }
+        })
+
+        return data;
 
     }
 

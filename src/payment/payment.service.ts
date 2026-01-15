@@ -41,6 +41,91 @@ export class PaymentService {
         }
     }
 
+
+    async getALlReviwPayment(page: number = 1, limit: number = 10) {
+
+        const skip = (page - 1) * limit
+
+        const total = await this.prisma.payment.count({
+            where: {
+                status: "PAID",
+                releaseStatus: "REVIEW"
+            }
+        });
+
+
+
+        const result = await this.prisma.payment.findMany({
+            where: {
+                status: "PAID",
+                releaseStatus: "REVIEW"
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                createdAt: "asc"
+            }
+        });
+
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                totalPage,
+                page,
+                limit,
+            },
+            data: result
+        }
+
+    }
+    async getALlRelesePayment(page: number = 1, limit: number = 10) {
+
+        const skip = (page - 1) * limit
+
+        const total = await this.prisma.payment.count({
+            where: {
+                status: "PAID",
+                releaseStatus: "RELEASE"
+            }
+        });
+
+
+
+        const result = await this.prisma.payment.findMany({
+            where: {
+                status: "PAID",
+                releaseStatus: "RELEASE"
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                createdAt: "asc"
+            }
+        });
+
+        const totalPage = Math.ceil(total / limit);
+
+        return {
+            meta: {
+                totalPage,
+                page,
+                limit,
+            },
+            data: result
+        }
+
+    }
+
+
+
+
+
+
+
+
+    // ----------Payment Webhook---------------- //
+
     async handleWebhookEvent(event: Stripe.Event) {
 
         try {

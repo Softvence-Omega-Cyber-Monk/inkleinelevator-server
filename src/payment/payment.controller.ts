@@ -1,38 +1,41 @@
-import { 
-  BadRequestException, 
-  Body, 
-  Controller, 
-  Headers, 
-  HttpCode, 
-  Inject, 
-  Post, 
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Inject,
+  Post,
+  Query,
   Req,
-  UseGuards 
+  UseGuards
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation } from '@nestjs/swagger';
 import { createPaymentDto } from './dto/payment.request.dto';
 import Stripe from 'stripe';
+import { AdminGuard } from 'src/guard/admin.guard';
 
 @Controller('payment')
 export class PaymentController {
   constructor(
-    private readonly paymentService: PaymentService, 
+    private readonly paymentService: PaymentService,
     @Inject('STRIPE') private stripe: Stripe
   ) { }
 
+  @Post("singlejob/payment/checkout")
   @UseGuards(AuthGuard("jwt"))
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Make Single Job Payment"
   })
-  @Post("singlejob/payment/checkout")
   async singleJobPayment(@Body() dto: createPaymentDto, @Req() req: any) {
 
     const result = await this.paymentService.paymentSingleJob(
-      dto.amount, 
-      req.user.userId, 
+      dto.amount,
+      req.user.userId,
       dto.jobId
     );
 
@@ -41,6 +44,46 @@ export class PaymentController {
       message: "Payment Success",
       data: result
     }
+  }
+
+
+  @Get('all-review-payment')
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "get all review payment (Only For Admin)"
+  })
+  async getAllReviewPayments(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    page = Number(page) || 1;
+    limit = Number(limit) || 10;
+    const data = await this.paymentService.getALlReviwPayment(page, limit);
+
+    return {
+      success: true,
+      message: "Review Retrived Successfylly",
+      data: data
+    }
+
+  }
+
+
+  @Get('all-relesed-payment')
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "get all relesed payment (Only For Admin)"
+  })
+  async getAllRelesePayments(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    page = Number(page) || 1;
+    limit = Number(limit) || 10;
+    const data = await this.paymentService.getALlRelesePayment(page, limit);
+
+    return {
+      success: true,
+      message: "Review Retrived Successfylly",
+      data: data
+    }
+
   }
 
   @Post('webhook')
@@ -65,7 +108,7 @@ export class PaymentController {
 
     try {
       console.log('Verifying webhook signature...');
-      
+
       event = this.stripe.webhooks.constructEvent(
         req,
         sig,

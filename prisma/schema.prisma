@@ -109,14 +109,16 @@ model Message {
 }
 
 model Payment {
-  paymentId       String        @id @default(uuid())
+  paymentId       String               @id @default(uuid())
   amount          Int
   userId          String
-  status          paymentStatus @default(UNPAID)
+  releaseStatus   PaymentReleaseStatus @default(REVIEW)
+  status          paymentStatus        @default(UNPAID)
   stripePaymentId String
-  jobId           String        
-  user            User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  job             Job           @relation(fields: [jobId], references: [jobId], onDelete: Cascade)
+  jobId           String
+  user            User                 @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  job             Job                  @relation(fields: [jobId], references: [jobId], onDelete: Cascade)
+  createdAt       DateTime             @default(now())
 }
 
 model Nitification {
@@ -165,6 +167,11 @@ enum BidStatus {
   ACCEPTED
   DECLINED
   PENDING_REVIEW
+}
+
+enum PaymentReleaseStatus {
+  REVIEW
+  RELEASE
 }
 
 enum paymentStatus {

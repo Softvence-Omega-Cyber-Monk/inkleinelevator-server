@@ -156,21 +156,48 @@ export class JobController {
 
   @UseGuards(AuthGuard("jwt"))
   @ApiBearerAuth()
-  @Patch("job-ready-for-review/:jobId")
+  @Patch("jobs/:jobId/ready-for-review")
   @ApiOperation({
-    summary: "Only For Elevator Update Job Status (PENDING_REVIEW)"
+    summary: "Mark a job as ready for review (PENDING_REVIEW)"
   })
-  async jobReadyForReview(@Param("jobId") jobId: string, @Req() req: any) {
+  async jobReadyForReview(
+    @Param("jobId") jobId: string,
+    @Req() req: any
+  ) {
     const userId = req.user.userId;
 
     const result = await this.jobService.pendingReview(jobId, userId);
 
     return {
       success: true,
-      message: "Job Complited Request Sent By Job Admin",
+      message: "Job marked as ready for review",
       data: result
-    }
+    };
+  }
 
+  
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @Patch("jobs/:jobId/complete")
+  @ApiOperation({
+    summary: "Mark job as completed (Only job owner can complete)"
+  })
+  async completeJob(
+    @Param("jobId") jobId: string,
+    @Req() req: any
+  ) {
+    const userId = req.user.userId;
+
+    const result = await this.jobService.compliteRequest(
+      userId,
+      jobId
+    );
+
+    return {
+      success: true,
+      message: "Job completed successfully",
+      data: result
+    };
   }
 
 }
