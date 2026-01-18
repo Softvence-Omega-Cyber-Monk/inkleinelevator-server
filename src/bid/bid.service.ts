@@ -1,8 +1,7 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JobBidProposalInterface } from './type/bid.type';
-import { Prisma } from '@prisma/client';
-import { BidStatus } from 'generated/prisma/enums';
+import { Prisma , BidStatus } from '@prisma/client';
 
 @Injectable()
 export class BidService {
