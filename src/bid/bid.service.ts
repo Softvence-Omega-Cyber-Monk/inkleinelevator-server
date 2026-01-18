@@ -91,7 +91,7 @@ export class BidService {
         const searchCondition = searchTerm && searchTerm.trim() !== ""
             ? {
                 OR: [
-                    ...(isNaN(searchNumber) ? [] : [{ bidAmount: searchNumber }]), // Only filter bidAmount if searchTerm is a number
+                    ...(isNaN(searchNumber) ? [] : [{ bidAmount: searchNumber }]),
                     { brefProposal: { contains: searchTerm, mode: 'insensitive' as Prisma.QueryMode } },
                     ...(validBidStatuses.includes(searchTerm as any) ? [{ status: searchTerm as BidStatus }] : []),
                     {
@@ -163,7 +163,6 @@ export class BidService {
         };
     };
 
-
     async getSingleBidWithDetails(bidId: string) {
         const result = await this.prisma.bid.findFirst({
             where: {
@@ -193,4 +192,73 @@ export class BidService {
         return result;
 
     };
+
+    async getMyAllBid(page: number = 1, limit: number = 10, searchTerm: string, userId: string) {
+        const skip = (page - 1) * limit;
+
+        const whereCondition: Prisma.BidWhereInput = {
+            userId: userId,
+            AND: searchTerm && searchTerm.trim() !== ""
+                ? [
+                    {
+                        job: {
+                            OR: [
+                                {
+                                    jobTitle: {
+                                        contains: searchTerm,
+                                        mode: "insensitive",
+                                    },
+                                },
+                                {
+                                    jobType: {
+                                        contains: searchTerm,
+                                        mode: "insensitive",
+                                    },
+                                },
+                                {
+                                    projectDescription: {
+                                        contains: searchTerm,
+                                        mode: "insensitive",
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ]
+                : [],
+        };
+
+        const total = await this.prisma.bid.count({
+            where: whereCondition,
+        });
+
+        const totalPage = Math.ceil(total / limit);
+
+        const data = await this.prisma.bid.findMany({
+            where: whereCondition,
+            skip,
+            take: limit,
+            include: {
+                job: {
+                    select: {
+                        jobId: true,
+                        jobTitle: true,
+                        jobType: true,
+                        projectDescription: true,
+                    },
+                },
+            },
+        });
+
+        return {
+            meta: {
+                total,
+                totalPage,
+                page,
+                limit,
+            },
+            data
+        };
+    };
+
 }

@@ -4,6 +4,8 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from 'src/guard/admin.guard';
 import { UpdateUserProfileDto, UpdateUserVerifiedStatusDto } from './dto/user.dto';
+import { UserGuard } from 'src/guard/user.guard';
+import { ElevatorGuard } from 'src/guard/elevator.guard';
 
 @Controller('user')
 export class UserController {
@@ -114,4 +116,79 @@ export class UserController {
     };
   }
 
+  @Get("get-my-all-active-jobs")
+  @UseGuards(AuthGuard("jwt"), UserGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "My all active job (USER)"
+  })
+  async getMyAllActiveJobs(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.activeJobs(userId);
+
+    return {
+      success: true,
+      message: "Al Active Jobs Retrived Successfully",
+      data: result
+    }
+
+  }
+  @Get("get-my-all-recent-activity")
+  @UseGuards(AuthGuard("jwt"), UserGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "My all recent activity"
+  })
+  async recentActivity(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.rcentActivity(userId);
+
+    return {
+      success: true,
+      message: "Recent Activity Retrived Successfully",
+      data: result
+    }
+
+  }
+
+  @Get("get-elevator-all-active-jobs")
+  @UseGuards(AuthGuard("jwt"), ElevatorGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Elevator All Active Jobs Only Can (ELEVATOR)"
+  })
+  async elevetorAllActiveJobs(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.elevetorAllActiveJobs(userId);
+
+    return {
+      success: true,
+      message: "All Active Jobs Retrived Successfully",
+      data: result
+    }
+  }
+
+
+  @Get("get-elevator-all-recent-bid")
+  @UseGuards(AuthGuard("jwt"), ElevatorGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Elevator All Recent Bid Only Can (ELEVATOR)"
+  })
+  async elevetorAllRecentBid(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.myAllRecentBid(userId);
+
+    return {
+      success: true,
+      message: "Recent Bid Retrived Successfully",
+      data: result
+    }
+  };
+
+  
 }

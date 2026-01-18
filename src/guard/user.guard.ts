@@ -1,0 +1,15 @@
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+
+@Injectable()
+export class UserGuard implements CanActivate {
+    canActivate(context: ExecutionContext): boolean {
+        const request = context.switchToHttp().getRequest();
+        const user = request.user;
+
+        if (!user || user.role !== 'USER') {
+            throw new ForbiddenException('You do not have permission to access this route');
+        }
+
+        return true;
+    }
+}

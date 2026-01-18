@@ -108,11 +108,43 @@ export class BidController {
     const result = await this.bidService.getSingleBidWithDetails(bidId);
 
     return {
-      success : true,
-      message : "Bid retrived successfully",
-      data : result
+      success: true,
+      message: "Bid retrived successfully",
+      data: result
     }
 
   }
+
+
+
+  @Get('my-bids')
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "get my all bid only can (ELEVATOR)"
+  })
+  @ApiQuery({
+    name : "searchTerm",
+    required : false,
+    example : ""
+  })
+  async getMyAllBid(
+    @Req() req: any,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('searchTerm') searchTerm: string,
+  ) {
+    const userId = req.user.userId;
+
+    const result = await this.bidService.getMyAllBid(Number(page) || 1, Number(limit) || 10, searchTerm || '', userId);
+
+    return {
+      success: true,
+      message: "My All Bid Retrived Successfully",
+      data: result
+    }
+
+  }
+
 
 }

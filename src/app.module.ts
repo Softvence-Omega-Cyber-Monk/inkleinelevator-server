@@ -11,11 +11,12 @@ import { StripeModule } from './stripe/stripe.module';
 import { PaymentModule } from './payment/payment.module';
 import { BidModule } from './bid/bid.module';
 import { UserModule } from './user/user.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [PrismaModule, ConfigModule.forRoot({
     isGlobal: true
-  }), AuthModule, JobModule, CloudinaryModule, StripeModule, PaymentModule, BidModule, UserModule],
+  }), AuthModule, JobModule, CloudinaryModule, StripeModule, PaymentModule, BidModule, UserModule, MessageModule],
   controllers: [AppController],
   providers: [AppService, CloudinaryProvider],
   exports: ["CLOUDINARY"]

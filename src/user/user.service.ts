@@ -150,6 +150,72 @@ export class UserService {
         });
 
         return updatedUser;
+    };
+
+
+    async activeJobs(userId: string) {
+        const result = await this.prisma.job.findMany({
+            where: {
+                userId: userId,
+                jobStatus: {
+                    notIn: ["COMPLITE", "DECLINED"]
+                }
+            }
+        });
+
+        return result;
+
+    };
+
+    async rcentActivity(userId: string) {
+        const result = await this.prisma.nitification.findMany({
+            where: {
+                userId: userId
+            },
+            take: 10,
+            select: {
+                description: true,
+                title: true,
+                createdAt: true,
+                notificationId: true,
+                logo: true
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+
+        return result
+    };
+
+
+    async elevetorAllActiveJobs(userId: string) {
+        const result = await this.prisma.bid.findMany({
+            where: {
+                userId: userId,
+                status: "ACCEPTED"
+            },
+            include: {
+                job: true
+            }
+        });
+
+        return result;
+    };
+
+
+    async myAllRecentBid(userId: string) {
+        const result = await this.prisma.bid.findMany({
+            where: {
+                userId: userId
+            },
+            include: {
+                job: true
+            }
+        });
+
+        return result;
+
     }
 
 }
