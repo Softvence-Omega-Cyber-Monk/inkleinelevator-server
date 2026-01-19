@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpException, HttpStatus, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto, SignUpDto } from './dto/user.request.dto';
+import { ChangePasswordDto, SignInDto, SignUpDto } from './dto/user.request.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthController {
@@ -150,5 +150,78 @@ export class AuthController {
     }
 
   }
+
+
+
+  @Post('upload-profile')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload / Update user profile image' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        profile: {
+          type: 'string',
+          format: 'binary',
+          description: 'User profile image',
+        },
+      },
+      required: ['profile'],
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('profile', {
+      limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    }),
+  )
+  async uploadProfile(
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new HttpException('Profile image is required', 400);
+    }
+
+    const userId = req.user.id;
+
+    const result = await this.authService.uploadProfile(userId, file);
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+      data: result,
+    };
+  };
+
+
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change user password' })
+  async changePassword(
+    @Req() req: any,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    const userId = req.user.userId;
+
+    if (!dto.oldPassword || !dto.newPassword) {
+      throw new HttpException(
+        'Old password and new password are required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.authService.changePassword(userId, dto);
+
+    return {
+      success: true,
+      message: 'Password changed successfully',
+    };
+  }
+
 
 }

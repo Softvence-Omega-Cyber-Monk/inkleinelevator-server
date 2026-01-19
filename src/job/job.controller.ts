@@ -13,6 +13,8 @@ import {
   Patch,
   ParseIntPipe,
   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -241,38 +243,61 @@ export class JobController {
   @Get("get-all-job")
   @UseGuards(AuthGuard("jwt"))
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: "get all job"
-  })
-  async getAllJOb() {
-    const result = await this.jobService.getAllJob();
-
+  @ApiOperation({ summary: "Get all open jobs with search, filter, and pagination" })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'jobType', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getAllJob(
+    @Query('search') search?: string,
+    @Query('jobType') jobType?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number
+  ) {
+    const result = await this.jobService.getAllJob({
+      search,
+      jobType,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
 
     return {
       success: true,
-      message: "All Job Retrived Successfully",
-      data: result
-    }
-
+      message: "All Jobs Retrieved Successfully",
+      data: result,
+    };
   }
 
   @Get("get-myJob")
   @UseGuards(AuthGuard("jwt"))
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: "Get my all job"
-  })
-  async getMyAllJob(@Req() req: any) {
+  @ApiOperation({ summary: "Get my jobs with search, filter, and pagination" })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by job title or project description' })
+  @ApiQuery({ name: 'jobStatus', required: false, type: String, description: 'Filter by job status' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of jobs per page' })
+  @HttpCode(HttpStatus.OK)
+  async getMyAllJob(
+    @Req() req: any,
+    @Query('search') search?: string,
+    @Query('jobStatus') jobStatus?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number
+  ) {
     const userId = req.user.userId;
 
-    const result = await this.jobService.getMyAllJOb(userId);
+    const result = await this.jobService.getMyAllJob(userId, {
+      search,
+      jobStatus,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
 
     return {
       success: true,
-      message: "My all job retrived successfully!",
-      data: result
-    }
-
+      message: "My jobs retrieved successfully!",
+      data: result,
+    };
   }
 
   @Get("get-single-job/:jobId")

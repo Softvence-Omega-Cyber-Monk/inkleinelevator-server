@@ -1,5 +1,5 @@
 import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
-import { Prisma , User} from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -98,7 +98,7 @@ export class UserService {
         });
 
         return {
-            message: "User Deleted Successfully",
+            message: "User Profile Deleted Successfully",
         };
     };
 
@@ -114,8 +114,6 @@ export class UserService {
         if (!update) throw new NotFoundException("User not found");
         return update;
     };
-
-
 
     async updateUserProfile(userId: string, payload: Partial<User>) {
 
@@ -214,6 +212,110 @@ export class UserService {
         });
 
         return result;
+    };
+
+
+
+    async userDashboardAnalytics(userId: string) {
+        const [
+            totalCompleteJob,
+            totalActiveJob,
+            totalBidCount,
+            totalInvestmentResult
+        ] = await Promise.all([
+            this.prisma.job.count({
+                where: { userId, jobStatus: "COMPLITE" },
+            }),
+
+            this.prisma.job.count({
+                where: { userId, jobStatus: { notIn: ["DECLINED", "COMPLITE"] } },
+            }),
+
+            this.prisma.bid.count({
+                where: { job: { userId } },
+            }),
+
+            this.prisma.payment.aggregate({
+                _sum: { amount: true },
+                where: {
+                    userId,
+                    status: "PAID",
+                    releaseStatus: { not: "RELESE" }
+                },
+            }),
+        ]);
+
+        return {
+            totalCompleteJob,
+            totalActiveJob,
+            totalBidCount,
+            totalInvestment: totalInvestmentResult._sum.amount ?? 0,
+        };
+    }
+
+    async getUserAndElevetorActivity(userId: string) {
+        const result = await this.prisma.recentActivity.findMany({
+            where: {
+                userId: userId
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            take: 10
+        });
+
+        return result;
+    };
+
+
+    async elevetorDashboardAnalytics(userId: string) {
+        const totalBid = await this.prisma.bid.count({
+            where: {
+                userId: userId
+            }
+        });
+
+        const jobCount = await this.prisma.job.count({
+            where: {
+                jobStatus: { in: ['PENDING_REVIEW', 'INPROGRESS'] },
+                bids: {
+                    some: { status: 'ACCEPTED' },
+                },
+            },
+        });
+
+        const userRatingResult = await this.prisma.review.aggregate({
+            _avg: { rating: true },
+            where: { revieweeId: userId },
+        });
+
+        const totalPaymentResult = await this.prisma.payment.aggregate({
+            _sum: {
+                amount: true,
+            },
+            where: {
+                user: {
+                    bids: {
+                        some: {
+                            userId: userId,
+                            status: 'ACCEPTED',
+                            job: { jobStatus: 'COMPLITE' }
+                        },
+                    },
+                },
+            },
+        });
+
+        // Extract total
+        const totalPayment = totalPaymentResult._sum.amount ?? 0;
+
+
+        return {
+            totalBid,
+            jobCount,
+            userRatingResult,
+            totalRevenew: totalPayment
+        }
 
     }
 

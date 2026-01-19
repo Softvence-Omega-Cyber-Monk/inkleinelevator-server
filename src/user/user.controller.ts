@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -190,5 +190,80 @@ export class UserController {
     }
   };
 
-  
+  @Delete("/ownProfileDelete")
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "User Own Profile Delete"
+  })
+  async userOwnProfileDelete(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.deleteUser(userId);
+
+    return {
+      success: true,
+      message: "User Profile Delete Successfully",
+      data: result
+    }
+
+  }
+
+
+  @Get("userDashboardAnalytics")
+  @UseGuards(AuthGuard("jwt"), UserGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "User Dashboard Analytics (Only Can USER)"
+  })
+  async userDashboardAnalytics(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.userDashboardAnalytics(userId);
+
+    return {
+      success: true,
+      message: "User Dashboard Analytics Retrived Successfully",
+      data: result
+    }
+  };
+
+
+  @Get("getAllRecentActivity")
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Get All Recent Activity (Only Can USER & ELEVATOR)"
+  })
+  async getAllRecentActivity(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.getUserAndElevetorActivity(userId)
+
+    return {
+      success: true,
+      data: result
+
+    }
+
+  };
+
+
+  @Get('dashboardAnalytics')
+  @UseGuards(AuthGuard('jwt'), ElevatorGuard) 
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Elevator Dashboard Analytics (Only for ELEVATOR role)' })
+  @HttpCode(HttpStatus.OK)
+  async elevatorDashboardAnalytics(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.userService.elevetorDashboardAnalytics(userId);
+
+    return {
+      success: true,
+      message: 'Elevator Dashboard Analytics Retrieved Successfully',
+      data: result,
+    };
+  }
+
 }

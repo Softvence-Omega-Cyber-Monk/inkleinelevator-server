@@ -5,6 +5,7 @@ import {
     IsNotEmpty,
     IsOptional,
     IsString,
+    MinLength,
 } from 'class-validator';
 import { Role } from '@prisma/client';
 
@@ -64,4 +65,14 @@ export class SignInDto {
     @IsNotEmpty()
     @IsString()
     password: string
+};
+
+
+export class ChangePasswordDto {
+    @IsString()
+    oldPassword: string;
+
+    @IsString()
+    @MinLength(8)
+    newPassword: string;
 }

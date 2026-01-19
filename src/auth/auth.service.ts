@@ -5,6 +5,7 @@ import { ISignUp } from './type/SignUpType';
 import { JwtService } from '@nestjs/jwt';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import Stripe from 'stripe';
+import { ChangePasswordDto } from './dto/user.request.dto';
 
 @Injectable()
 export class AuthService {
@@ -243,6 +244,59 @@ export class AuthService {
         const url = this.elevatorStripeAccountAcive(user?.stripeAccountId);
         return url;
 
+    }
+
+    async uploadProfile(userId: string, file: Express.Multer.File) {
+        const user = await this.prisma.user.findUnique({
+            where: { userId: userId },
+        });
+
+        if (!user) {
+            throw new HttpException('User not found', 404);
+        }
+
+        const uploadResult: any = await this.CloudinaryService.uploadFile(
+            file,
+            'user-profiles',
+        );
+
+        return this.prisma.user.update({
+            where: { userId: userId },
+            data: {
+                profile: uploadResult?.secure_url,
+            },
+        });
+    };
+
+
+    async changePassword(
+        userId: string,
+        dto: ChangePasswordDto,
+    ) {
+        const user = await this.prisma.user.findUnique({
+            where: { userId },
+        });
+
+        if (!user) {
+            throw new HttpException('User not found', 404);
+        }
+
+        const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+
+        if (!isMatch) {
+            throw new HttpException('Old password is incorrect', 400);
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+        await this.prisma.user.update({
+            where: { userId },
+            data: {
+                password: hashedPassword,
+            },
+        });
+
+        return null;
     }
 
 }

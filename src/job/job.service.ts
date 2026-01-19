@@ -4,6 +4,23 @@ import { CreateJobDto, updateJobDto } from './dto/create.job.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { Prisma } from '@prisma/client';
 
+
+interface GetAllJobOptions {
+    search?: string;
+    jobType?: string;
+    page?: number;
+    limit?: number;
+}
+
+
+interface GetMyJobOptions {
+    search?: string;
+    jobStatus?: string;
+    page?: number;
+    limit?: number;
+}
+
+
 @Injectable()
 export class JobService {
     constructor(
@@ -165,34 +182,94 @@ export class JobService {
 
     }
 
-    async getAllJob() {
-        const result = await this.prisma.job.findMany({
-            where: {
-                paymentStatus: "PAID",
-                jobStatus: "OPEN"
-            }
-        });
+    async getAllJob(options: GetAllJobOptions = {}) {
+        const { search, jobType, page = 1, limit = 10 } = options;
 
-        if (!result) throw new NotFoundException("No Paind Open Job Dos't Available");
+        const where: any = {
+            jobStatus: 'OPEN', // শুধু open jobs
+        };
 
-        return result;
+        // jobType filter
+        if (jobType) {
+            where.jobType = jobType;
+        }
 
-    };
+        // search filter (jobTitle বা projectDescription)
+        if (search) {
+            where.OR = [
+                { jobTitle: { contains: search, mode: 'insensitive' } },
+                { projectDescription: { contains: search, mode: 'insensitive' } },
+            ];
+        }
 
+        const skip = (page - 1) * limit;
 
-    async getMyAllJOb(userId: string) {
-        const result = await this.prisma.job.findMany({
-            where: {
-                userId: userId
-            },
-            include: {
-                bids: true
-            }
-        });
+        // Find jobs + total count together for pagination
+        const [jobs, totalCount] = await this.prisma.$transaction([
+            this.prisma.job.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.job.count({ where }),
+        ]);
 
-        return result
-    };
+        if (!jobs || jobs.length === 0) {
+            throw new NotFoundException('No Open Jobs Found');
+        }
 
+        return {
+            total: totalCount,
+            page,
+            limit,
+            jobs,
+        };
+    }
+
+    async getMyAllJob(userId: string, options: GetMyJobOptions = {}) {
+        const { search, jobStatus, page = 1, limit = 10 } = options;
+
+        const where: any = { userId };
+
+        // filter by jobStatus
+        if (jobStatus) {
+            where.jobStatus = jobStatus;
+        }
+
+        // search filter: jobTitle / projectDescription
+        if (search) {
+            where.OR = [
+                { jobTitle: { contains: search, mode: 'insensitive' } },
+                { projectDescription: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+
+        // Find jobs + total count
+        const [jobs, totalCount] = await this.prisma.$transaction([
+            this.prisma.job.findMany({
+                where,
+                skip,
+                take: limit,
+                include: { bids: true },
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.job.count({ where }),
+        ]);
+
+        if (!jobs || jobs.length === 0) {
+            throw new NotFoundException("No Jobs Found");
+        }
+
+        return {
+            total: totalCount,
+            page,
+            limit,
+            jobs,
+        };
+    }
 
     async getSingleJobs(jobId: string) {
         const findJob = await this.prisma.job.findUnique({
@@ -413,7 +490,7 @@ export class JobService {
             }
         });
 
-        if(!deleteJob) throw new NotFoundException("Job Not Found For Delete");
+        if (!deleteJob) throw new NotFoundException("Job Not Found For Delete");
 
         return deleteJob
 
