@@ -40,6 +40,29 @@ export class BidService {
             }
         });
 
+        const findJob = await this.prisma.job.findUnique({
+            where: {
+                jobId: data.jobId
+            }
+        });
+
+        if (findJob) {
+            await this.prisma.nitification.create({
+                data: {
+                    title: "New Bid Received",
+                    description: `Your job "${findJob.jobTitle}" has received a new bid.`,
+                    logo: "BID",
+                    userId: findJob.userId
+                }
+            });
+            await this.prisma.recentActivity.create({
+                data: {
+                    userId: findJob.userId,
+                    description: `A new bid has been submitted for your job "${findJob.jobTitle}".`
+                }
+            });
+        }
+
         return bid;
     }
 
@@ -48,34 +71,42 @@ export class BidService {
     };
 
     async acceptBid(userId: string, jobId: string, bidId: string) {
-        const result = await this.prisma.bid.findFirst({
-            where: {
-                bidId: bidId
-            },
-            include: {
-                job: true
-            }
+        const bid = await this.prisma.bid.findFirst({
+            where: { bidId },
+            include: { job: true }
         });
 
-        if (!result) throw new NotFoundException("Bid Not Found");
+        if (!bid) throw new NotFoundException("Bid not found");
 
-        if (result?.job?.userId !== userId) throw new HttpException("Access Decliene, You are not permitted access this route", 403);
+        if (bid?.job?.userId !== userId)
+            throw new HttpException("Access denied. You are not permitted to perform this action.", 403);
 
         await this.prisma.bid.update({
-            where: {
-                bidId: bidId
-            },
-            data: {
-                status: "ACCEPTED"
-            }
+            where: { bidId },
+            data: { status: "ACCEPTED" }
         });
 
         await this.prisma.job.update({
-            where: {
-                jobId: jobId
-            },
+            where: { jobId },
+            data: { jobStatus: "INPROGRESS" }
+        });
+
+        const bidOwnerId = bid.userId;
+        const jobTitle = bid.job?.jobTitle || "Your Job";
+
+        await this.prisma.nitification.create({
             data: {
-                jobStatus: "INPROGRESS"
+                title: "Bid Accepted ✅",
+                description: `Congratulations! Your bid for the job "${jobTitle}" has been accepted.`,
+                logo: "ACCEPT",
+                userId: bidOwnerId
+            }
+        });
+
+        await this.prisma.recentActivity.create({
+            data: {
+                userId: bidOwnerId,
+                description: `Your bid for the job "${jobTitle}" has been accepted and the job is now in progress.`
             }
         });
 

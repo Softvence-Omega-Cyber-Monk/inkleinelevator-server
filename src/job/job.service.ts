@@ -156,7 +156,9 @@ export class JobService {
             documentUrls.push(upload.secure_url);
         }
 
-        return this.prisma.job.create({
+
+
+        const result = this.prisma.job.create({
             data: {
                 userId,
                 jobTitle: dto.jobTitle,
@@ -177,8 +179,26 @@ export class JobService {
                 estimitedBudget: dto.estimatedBudget,
                 photo: photoUrls,
                 documents: documentUrls,
-            },
+            }
         });
+
+        await this.prisma.nitification.create({
+            data: {
+                description: `${(await result).jobTitle} Post`,
+                logo: "JOB",
+                title: "Post New JOb",
+                userId: userId
+            }
+        })
+
+        await this.prisma.recentActivity.create({
+            data: {
+                userId: userId,
+                description: 'New Job Posted Successfully'
+            }
+        })
+
+        return result
 
     }
 
@@ -341,7 +361,7 @@ export class JobService {
         if (!result) throw new NotFoundException("Job not found");
 
         if (result.userId !== userId) throw new NotAcceptableException("You are not permited for this route");
- 
+
         const allowedStatuses = ["INPROGRESS", "PENDING_REVIEW"];
 
         if (!allowedStatuses.includes(result.jobStatus)) {
@@ -358,6 +378,24 @@ export class JobService {
                 jobStatus: "COMPLITE"
             }
         })
+
+
+        await this.prisma.nitification.create({
+            data: {
+                title: "Job Completion Request",
+                description: `Your job "${(await result).jobTitle}" has been marked as completed. Please review and confirm.`,
+                logo: "COMPLETED",
+                userId: userId
+            }
+        });
+
+        await this.prisma.recentActivity.create({
+            data: {
+                userId: userId,
+                description: `Completion request submitted for job "${(await result).jobTitle}".`
+            }
+        });
+
 
         return data;
 
@@ -491,6 +529,22 @@ export class JobService {
         });
 
         if (!deleteJob) throw new NotFoundException("Job Not Found For Delete");
+
+        await this.prisma.nitification.create({
+            data: {
+                title: "Job Deleted",
+                description: `Your job "${(await deleteJob).jobTitle}" has been deleted successfully.`,
+                logo: "DELETE",
+                userId: userId
+            }
+        });
+
+        await this.prisma.recentActivity.create({
+            data: {
+                userId: userId,
+                description: `Job "${(await deleteJob).jobTitle}" deleted successfully.`
+            }
+        });
 
         return deleteJob
 
