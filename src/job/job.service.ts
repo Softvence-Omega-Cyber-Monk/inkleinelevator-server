@@ -809,4 +809,18 @@ export class JobService {
 
     }
 
+
+    async closeJob(jobId: string) {
+        const result = await this.prisma.job.update({
+            where: {
+                jobId: jobId
+            },
+            data: {
+                jobStatus: "DECLINED"
+            }
+        });
+        if (!result) throw new NotFoundException("Job Not Found");
+        return result;
+    }
+
 }

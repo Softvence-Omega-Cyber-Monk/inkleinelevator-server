@@ -420,5 +420,21 @@ export class JobController {
     }
 
   }
+  @Post("close-Job")
+  @UseGuards(AuthGuard("jwt"))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Get all jobs (Admin)"
+  })
+  async closeJOb(@Query("jobId") jobId: string) {
+    const result = await this.jobService.closeJob(jobId);
+
+    return {
+      success: true,
+      message: "Job Closed Successfully",
+      data: result
+    }
+
+  }
 
 }
