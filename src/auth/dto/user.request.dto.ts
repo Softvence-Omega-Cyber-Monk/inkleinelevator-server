@@ -69,9 +69,15 @@ export class SignInDto {
 
 
 export class ChangePasswordDto {
+    @ApiProperty({
+        example: "12345678"
+    })
     @IsString()
     oldPassword: string;
 
+    @ApiProperty({
+        example: "12345678"
+    })
     @IsString()
     @MinLength(8)
     newPassword: string;
