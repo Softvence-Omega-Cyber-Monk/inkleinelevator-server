@@ -54,8 +54,7 @@ export class MessageController {
   })
   async getChatedUsers(@Req() req: any) {
     const userId = req.user.userId;
-    const result = this.messageService.chatedUserList(userId);
-
+    const result = await this.messageService.chatedUserList(userId);
     return {
       success: true,
       message: "All Chat Listed User Retridev Successfully",
