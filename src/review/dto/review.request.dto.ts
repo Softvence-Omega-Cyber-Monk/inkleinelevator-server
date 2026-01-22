@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateReviewDto {
-    @ApiProperty()
-    @IsString()
-    reviewerId: string;
+    // @ApiProperty()
+    // @IsString()
+    // reviewerId: string;
     @ApiProperty()
     @IsString()
     revieweeId: string;

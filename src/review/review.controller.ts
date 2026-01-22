@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/review.request.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,8 +14,9 @@ export class ReviewController {
   @ApiOperation({
     summary: "Create review"
   })
-  async createReview(@Body() dto: CreateReviewDto) {
-    const data = await this.reviewService.createReview(dto);
+  async createReview(@Body() dto: CreateReviewDto, @Req() req: any) {
+    const reviewerId = req.user.userId;
+    const data = await this.reviewService.createReview(dto, reviewerId);
 
     return {
       success: true,

@@ -539,4 +539,21 @@ export class UserService {
         };
     }
 
+    async shortConstructorListForApproval() {
+        const result = await this.prisma.user.findMany({
+            where: {
+                role: "ELEVATOR",
+                verifidStatus: "REQUEST"
+            },
+            take: 7,
+            orderBy: {
+                createdAt: "asc"
+            }
+        });
+
+        return result
+    }
+
+    
+
 }

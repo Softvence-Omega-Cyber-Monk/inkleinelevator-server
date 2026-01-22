@@ -432,13 +432,39 @@ export class JobService {
 
 
     async getSingleJobs(jobId: string) {
+        // const findJob = await this.prisma.job.findUnique({
+        //     where: {
+        //         jobId,
+        //     },
+        //     include: {
+        //         bids: {
+        //             include: {
+        //                 user: true
+        //             }
+        //         },
+        //         _count: { select: { bids: true } }
+        //     },
+        // });
+
+
         const findJob = await this.prisma.job.findUnique({
-            where: {
-                jobId,
-            },
+            where: { jobId },
             include: {
-                bids: true,
-                _count: { select: { bids: true } }
+                bids: {
+                    include: {
+                        user: {
+                            include: {
+                                reviewsReceived: {
+                                    select: { rating: true },
+                                },
+                                _count: {
+                                    select: { reviewsReceived: true },
+                                },
+                            },
+                        },
+                    },
+                },
+                _count: { select: { bids: true } },
             },
         });
 

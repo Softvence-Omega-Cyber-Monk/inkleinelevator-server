@@ -6,8 +6,8 @@ import { CreateReviewDto } from './dto/review.request.dto';
 export class ReviewService {
     constructor(private prisma: PrismaService) { }
 
-    async createReview(dto: CreateReviewDto) {
-        const { reviewerId, revieweeId, jobId, rating, comment } = dto;
+    async createReview(dto: CreateReviewDto , reviewerId : string) {
+        const {  revieweeId, jobId, rating, comment } = dto;
 
         if (reviewerId === revieweeId) {
             throw new BadRequestException("You cannot review yourself");
