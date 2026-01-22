@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpException, HttpStatus, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto, SignInDto, SignUpDto } from './dto/user.request.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
@@ -120,6 +120,25 @@ export class AuthController {
     summary: "Get user own profile"
   })
   async getMe(@Req() req: any) {
+    const userId = req.user.userId;
+
+    const result = await this.authService.getMe(userId);
+
+    return {
+      success: true,
+      message: "User Profile Retrived Successfully",
+      data: result
+    }
+
+  }
+  @UseGuards(AuthGuard("jwt"))
+  @Get("getMe")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Get user own profile"
+  })
+  async getMe1(@Req() req: any) {
     const userId = req.user.userId;
 
     const result = await this.authService.getMe(userId);
