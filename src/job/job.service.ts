@@ -431,35 +431,70 @@ export class JobService {
     }
 
 
+    // async getSingleJobs(jobId: string) {
+    //     // const findJob = await this.prisma.job.findUnique({
+    //     //     where: {
+    //     //         jobId,
+    //     //     },
+    //     //     include: {
+    //     //         bids: {
+    //     //             include: {
+    //     //                 user: true
+    //     //             }
+    //     //         },
+    //     //         _count: { select: { bids: true } }
+    //     //     },
+    //     // });
+
+
+    //     const findJob = await this.prisma.job.findUnique({
+    //         where: { jobId },
+    //         include: {
+    //             bids: {
+    //                 include: {
+    //                     user: {
+    //                         include: {
+    //                             reviewsReceived: {
+    //                                 select: { rating: true },
+    //                             },
+    //                             _count: {
+    //                                 select: { reviewsReceived: true },
+    //                             },
+    //                         },
+    //                     },
+    //                 },
+    //             },
+    //             _count: { select: { bids: true } },
+    //         },
+    //     });
+
+    //     if (!findJob) throw new NotFoundException("Job Not Found");
+
+    //     return {
+    //         totalBid: findJob._count.bids,
+    //         ...findJob
+    //     }
+
+    // };
+
     async getSingleJobs(jobId: string) {
-        // const findJob = await this.prisma.job.findUnique({
-        //     where: {
-        //         jobId,
-        //     },
-        //     include: {
-        //         bids: {
-        //             include: {
-        //                 user: true
-        //             }
-        //         },
-        //         _count: { select: { bids: true } }
-        //     },
-        // });
-
-
-        const findJob = await this.prisma.job.findUnique({
+        const job = await this.prisma.job.findUnique({
             where: { jobId },
             include: {
+                user: {
+                    include: {
+                        reviewsReceived: {
+                            select: { rating: true },
+                        },
+                        _count: { select: { reviewsReceived: true } },
+                    },
+                },
                 bids: {
                     include: {
                         user: {
                             include: {
-                                reviewsReceived: {
-                                    select: { rating: true },
-                                },
-                                _count: {
-                                    select: { reviewsReceived: true },
-                                },
+                                reviewsReceived: { select: { rating: true } },
+                                _count: { select: { reviewsReceived: true } },
                             },
                         },
                     },
@@ -468,14 +503,72 @@ export class JobService {
             },
         });
 
-        if (!findJob) throw new NotFoundException("Job Not Found");
-
-        return {
-            totalBid: findJob._count.bids,
-            ...findJob
+        if (!job) {
+            throw new NotFoundException('Job not found');
         }
 
-    };
+        // Calculate avgRating for job owner
+        const ownerReviews = job.user.reviewsReceived;
+        const ownerTotalRating = ownerReviews.reduce((sum, r) => sum + r.rating, 0);
+        const ownerAvgRating =
+            ownerReviews.length > 0
+                ? Number((ownerTotalRating / ownerReviews.length).toFixed(1))
+                : 0;
+
+        const jobOwner = {
+            ...job.user,
+            avgRating: ownerAvgRating,
+            totalReviews: job.user._count.reviewsReceived,
+        };
+
+        // Calculate avgRating for each bid user
+        const bidsWithAvg = job.bids.map((bid) => {
+            const reviews = bid.user.reviewsReceived;
+            const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+            const avgRating =
+                reviews.length > 0
+                    ? Number((totalRating / reviews.length).toFixed(1))
+                    : 0;
+
+            return {
+                ...bid,
+                user: {
+                    ...bid.user,
+                    avgRating,
+                    totalReviews: bid.user._count.reviewsReceived,
+                },
+            };
+        });
+
+        return {
+            jobId: job.jobId,
+            jobTitle: job.jobTitle,
+            jobType: job.jobType,
+            projectDescription: job.projectDescription,
+            technicalRequermentAndCertification:
+                job.technicalRequermentAndCertification,
+            elevatorType: job.elevatorType,
+            numberOfElevator: job.numberOfElevator,
+            capasity: job.capasity,
+            speed: job.speed,
+            address: job.address,
+            streetAddress: job.streetAddress,
+            city: job.city,
+            zipCode: job.zipCode,
+            photo: job.photo,
+            documents: job.documents,
+            estimitedBudget: job.estimitedBudget,
+            jobStatus: job.jobStatus,
+            paymentStatus: job.paymentStatus,
+            createdAt: job.createdAt,
+            updatedAt: job.updatedAt,
+
+            totalBids: job._count.bids,
+            owner: jobOwner,
+            bids: bidsWithAvg,
+        };
+    }
+
 
     async pendingReview(jobId: string, elevatorUserId: string) {
         const findJob = await this.prisma.job.findFirst({
