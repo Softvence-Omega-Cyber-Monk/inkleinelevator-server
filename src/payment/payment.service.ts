@@ -220,13 +220,6 @@ export class PaymentService {
 
     }
 
-
-
-
-
-
-
-
     // ----------Payment Webhook---------------- //
 
     async handleWebhookEvent(event: Stripe.Event) {

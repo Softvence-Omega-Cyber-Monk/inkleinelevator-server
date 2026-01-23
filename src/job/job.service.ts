@@ -571,7 +571,7 @@ export class JobService {
             paymentStatus: job.paymentStatus,
             createdAt: job.createdAt,
             updatedAt: job.updatedAt,
-
+            acceptedConstructorId: job.acceptedConstructorId,
             totalBids: job._count.bids,
             owner: jobOwner,
             bids: bidsWithAvg,

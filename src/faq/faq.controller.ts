@@ -14,7 +14,6 @@ export class FaqController {
   @UseGuards(AuthGuard("jwt"), AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new FAQ' })
-  @ApiBody({ type: FaqBodyDto })
   async createFaq(@Body() body: FaqBodyDto) {
     return {
       success: true,
