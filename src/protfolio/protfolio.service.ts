@@ -6,21 +6,25 @@ export class ProtfolioService {
     constructor(private prisma: PrismaService) { }
 
     async getProtfolio(userId: string) {
-        const result = await this.prisma.bid.findMany({
+        const bids = await this.prisma.bid.findMany({
             where: {
                 userId: userId,
-                status: "ACCEPTED"
+                status: 'ACCEPTED',
+                job: {
+                    jobStatus: 'COMPLITE',
+                },
             },
             include: {
                 job: {
                     include: {
-                        reviews: {
-                            
-                        }
-                    }
-                }
-            }
-        })
+                        reviews: true,
+                    },
+                },
+            },
+        });
+
+        return bids;
+
     }
 
 }
