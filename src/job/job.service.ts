@@ -408,7 +408,8 @@ export class JobService {
                 documents: job.documents,
                 photo: job.photo,
                 numberOfElevator: job.numberOfElevator,
-                acceptedConstructorId : job.acceptedConstructorId,
+                acceptedConstructorId: job.acceptedConstructorId,
+                acceptedConstructorBidId: job.acceptedConstructorBidId,
                 bids: job.bids.map(bid => ({
                     bidId: bid.bidId,
                     bidAmount: bid.bidAmount,
@@ -573,6 +574,7 @@ export class JobService {
             createdAt: job.createdAt,
             updatedAt: job.updatedAt,
             acceptedConstructorId: job.acceptedConstructorId,
+            acceptedConstructorBidId: job.acceptedConstructorBidId,
             totalBids: job._count.bids,
             owner: jobOwner,
             bids: bidsWithAvg,

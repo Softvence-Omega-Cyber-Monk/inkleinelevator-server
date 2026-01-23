@@ -75,6 +75,7 @@ model Job {
   documents                           String[]
   estimitedBudget                     String
   acceptedConstructorId               String?
+  acceptedConstructorBidId            String?
   jobStatus                           JobStatus        @default(OPEN)
   paymentStatus                       JobPaymentStatus @default(UNPAID)
   // Relations

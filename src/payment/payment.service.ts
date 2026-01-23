@@ -365,7 +365,8 @@ export class PaymentService {
             data: {
                 paymentStatus: "PAID",
                 jobStatus: "INPROGRESS",
-                acceptedConstructorId: findBid?.userId
+                acceptedConstructorId: findBid?.userId,
+                acceptedConstructorBidId: paymentIntent.metadata.bidId
             }
         })
 
