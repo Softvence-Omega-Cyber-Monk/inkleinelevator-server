@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation } from '@nestjs/swagger
 import { createPaymentDto } from './dto/payment.request.dto';
 import Stripe from 'stripe';
 import { AdminGuard } from 'src/guard/admin.guard';
+import { ElevatorGuard } from 'src/guard/elevator.guard';
 
 @Controller('payment')
 export class PaymentController {
@@ -69,6 +70,17 @@ export class PaymentController {
   }
 
 
+  @Post('stripe/onboarding-link')
+  @UseGuards(AuthGuard('jwt'), ElevatorGuard)
+  @ApiBearerAuth()
+  async createOnboardingLink(@Req() req) {
+    const userId = req.user.userId;
+    return {
+      success: true,
+      url: await this.paymentService.createOnBoardingLink(userId)
+    };
+  }
+
   @Get('all-relesed-payment')
   @UseGuards(AuthGuard('jwt'), AdminGuard)
   @ApiBearerAuth()
@@ -110,7 +122,10 @@ export class PaymentController {
     @Param('paymentId') paymentId: string,
   ) {
     return await this.paymentService.refundPayment(paymentId);
-  }
+  };
+
+
+
 
   @Post('webhook')
   @HttpCode(200)

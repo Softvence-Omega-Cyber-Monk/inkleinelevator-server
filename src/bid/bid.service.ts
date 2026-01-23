@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JobBidProposalInterface } from './type/bid.type';
 import { Prisma, BidStatus } from '@prisma/client';
@@ -10,6 +10,17 @@ export class BidService {
 
 
     async createBid(data: JobBidProposalInterface) {
+
+        const checkJobs = await this.prisma.job.findFirst({
+            where: {
+                jobId: data.jobId,
+                jobStatus: "DECLINED"
+            }
+        });
+
+        if (checkJobs) {
+            throw new BadRequestException("This Jobs Alreadu Closed");
+        }
 
         const checkBidRequest = await this.prisma.bid.findFirst({
             where: {
@@ -336,5 +347,7 @@ export class BidService {
 
         return null;
     }
+
+    
 
 }

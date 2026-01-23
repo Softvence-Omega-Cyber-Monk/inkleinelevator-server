@@ -16,7 +16,6 @@ export class ProtfolioController {
   })
   async protfolio(@Req() req: any) {
     const userId = req.user.userId;
-
     const result = await this.protfolioService.getProtfolio(userId);
 
     return {
@@ -24,7 +23,6 @@ export class ProtfolioController {
       message: "Protfolio Retrived Success",
       data: result
     }
-
   }
 
 }

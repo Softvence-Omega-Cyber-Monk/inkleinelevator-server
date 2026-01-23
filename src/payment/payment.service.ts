@@ -1,4 +1,7 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ElevatorGuard } from 'src/guard/elevator.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import Stripe from 'stripe';
 
@@ -112,15 +115,25 @@ export class PaymentService {
         const vendorAmount = payment.amount * 0.90;
         const vendorAmountInCents = Math.round(vendorAmount * 100);
 
-        await this.stripe.transfers.create({
+        const acct = await this.stripe.accounts.retrieve("acct_1SsGtNEKZph67h6I");
+        console.log(acct.capabilities);
+        if (acct.capabilities?.transfers !== 'active') {
+            throw new BadRequestException(
+                'Contractor Stripe account is not ready to receive payments'
+            );
+        }
+        const result = await this.stripe.transfers.create({
             amount: vendorAmountInCents,
             currency: "usd",
-            destination: user?.stripeAccountId as string,
+            destination: "acct_1SsGtNEKZph67h6I",
             transfer_group: `JOB_${payment.jobId}`,
             metadata: {
                 dbPaymentId: paymentId
-            }
+            },
+
         });
+
+        // console.log(result);
 
         return {
             message: "Payment transfer initiated"
@@ -135,12 +148,14 @@ export class PaymentService {
 
         if (!payment) throw new NotFoundException("Payment record not found");
 
-        await this.stripe.refunds.create({
+        const result = await this.stripe.refunds.create({
             payment_intent: payment.stripePaymentId,
             metadata: {
                 dbPaymentId: paymentId
             }
         });
+
+        console.log(result);
 
         return { message: "Refund initiated. Processing..." };
     }
@@ -219,6 +234,25 @@ export class PaymentService {
         }
 
     }
+
+    async createOnBoardingLink(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { userId },
+        });
+
+        if (!user?.stripeAccountId) {
+            throw new BadRequestException('Stripe account not found');
+        }
+
+        const accountLink = await this.stripe.accountLinks.create({
+            account: user.stripeAccountId,
+            refresh_url: 'http://localhost:3000/reauth',
+            return_url: 'http://localhost:3000/success',
+            type: 'account_onboarding',
+        });
+        return accountLink.url
+    }
+
 
     // ----------Payment Webhook---------------- //
 

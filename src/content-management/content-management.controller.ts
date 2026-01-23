@@ -16,8 +16,8 @@ export class ContentManagementController {
   @ApiOperation({ summary: 'Create Hero Section (one-time)' })
   @ApiResponse({ status: 201, description: 'Hero section created successfully' })
   @ApiResponse({ status: 400, description: 'Hero section already exists' })
-  create(@Body() dto: CreateHeroDto) {
-    const data = this.contentManagementService.createHero(dto);
+  async create(@Body() dto: CreateHeroDto) {
+    const data = await this.contentManagementService.createHero(dto);
     return {
       success: true,
       message: "Hero Created Successfully",
@@ -31,8 +31,8 @@ export class ContentManagementController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get Hero Section data' })
   @ApiResponse({ status: 200, description: 'Hero section fetched successfully' })
-  get() {
-    const data = this.contentManagementService.getHero();
+  async get() {
+    const data = await this.contentManagementService.getHero();
     return {
       success: true,
       message: "Hero Retrived Successfully",
@@ -46,8 +46,8 @@ export class ContentManagementController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update Hero Section' })
   @ApiResponse({ status: 200, description: 'Hero section updated successfully' })
-  update(@Body() dto: CreateHeroDto) {
-    const data = this.contentManagementService.updateHero(dto);
+  async update(@Body() dto: CreateHeroDto) {
+    const data = await this.contentManagementService.updateHero(dto);
     return {
       success: true,
       message: "Hero Update Successfully",

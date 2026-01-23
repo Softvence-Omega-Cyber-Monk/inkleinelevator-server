@@ -5,13 +5,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AdminGuard } from 'src/guard/admin.guard';
 import { UserGuard } from 'src/guard/user.guard';
+import { ElevatorGuard } from 'src/guard/elevator.guard';
 
 @Controller('bid')
 export class BidController {
   constructor(private readonly bidService: BidService) { }
 
-  @UseGuards(AuthGuard("jwt"))
+
   @Post("bid-jobs")
+  @UseGuards(AuthGuard("jwt") , ElevatorGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Bid Elevator One Jobs"
