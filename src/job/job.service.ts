@@ -408,6 +408,7 @@ export class JobService {
                 documents: job.documents,
                 photo: job.photo,
                 numberOfElevator: job.numberOfElevator,
+                acceptedConstructorId : job.acceptedConstructorId,
                 bids: job.bids.map(bid => ({
                     bidId: bid.bidId,
                     bidAmount: bid.bidAmount,
