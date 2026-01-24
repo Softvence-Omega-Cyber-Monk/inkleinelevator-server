@@ -29,6 +29,7 @@ model User {
   yearFounded        String?
   numberOfEmployee   String?
   website            String?
+  otp                String?
   businessAddress    String?
   refreshToken       String?
   stripeAccountId    String?
@@ -132,6 +133,22 @@ model Payment {
   createdAt       DateTime             @default(now())
 }
 
+model ContactMessage {
+  id          String  @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String
+  phoneNumber String?
+  userType    String?
+  subject     String
+  message     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_messages")
+}
+
 model Nitification {
   notificationId String   @id @default(uuid())
   userId         String
@@ -195,9 +212,10 @@ enum JobTypes {
 }
 
 model HeroSection {
-  id           String @id @default(uuid())
-  heroKay      String @unique
+  id           String  @id @default(uuid())
+  heroKay      String  @unique
   tagline      String
+  image        String?
   mainTitle    String
   subtitle     String
   primaryCTA   String

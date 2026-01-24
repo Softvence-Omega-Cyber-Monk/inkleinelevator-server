@@ -5,9 +5,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AtStrategie } from './strategies/at.strategies';
 import { RtStrategies } from './strategies/rt.strategies';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [JwtModule.register({}) , CloudinaryModule],
+  imports: [JwtModule.register({}), CloudinaryModule, MailModule],
   controllers: [AuthController],
   providers: [AuthService, AtStrategie, RtStrategies],
 })
