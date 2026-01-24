@@ -82,3 +82,36 @@ export class ChangePasswordDto {
     @MinLength(8)
     newPassword: string;
 }
+
+export class ForgotPasswordDto {
+    @ApiProperty({
+        example: "email@gmail.com"
+    })
+    @IsString()
+    email: string;
+}
+export class verifyOtp {
+    @ApiProperty({
+        example: "email@gmail.com"
+    })
+    @IsString()
+    email: string;
+    @ApiProperty({
+        example: "123456"
+    })
+    @IsString()
+    otp: string;
+}
+
+export class ChangePassword {
+    @ApiProperty({
+        example: "1234567"
+    })
+    @IsString()
+    password: string;
+    @ApiProperty({
+        example: "toekn"
+    })
+    @IsString()
+    token: string;
+}

@@ -29,6 +29,7 @@ model User {
   yearFounded        String?
   numberOfEmployee   String?
   website            String?
+  otp                String?
   businessAddress    String?
   refreshToken       String?
   stripeAccountId    String?

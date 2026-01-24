@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from "bcrypt"
 import { ISignUp } from './type/SignUpType';
@@ -6,10 +6,11 @@ import { JwtService } from '@nestjs/jwt';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import Stripe from 'stripe';
 import { ChangePasswordDto } from './dto/user.request.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService, private JwtService: JwtService, private CloudinaryService: CloudinaryService, @Inject('STRIPE') private stripe: Stripe) { }
+    constructor(private prisma: PrismaService, private JwtService: JwtService, private mailService: MailService, private CloudinaryService: CloudinaryService, @Inject('STRIPE') private stripe: Stripe) { }
 
     async constractorStripeAccount(email: string) {
         const account = await this.stripe.accounts.create({
@@ -296,6 +297,101 @@ export class AuthService {
         });
 
         return null;
+    }
+
+    async sendOtpInUserEmail(email: string) {
+
+        const findUser = await this.prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        if (!findUser) throw new NotFoundException("User Not Found");
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await this.mailService.sendMail(
+            email,
+            'Reset Your Password',
+            code,
+        );
+
+        const hashOtp = await bcrypt.hash(code, 10);
+
+        await this.prisma.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                otp: hashOtp
+            }
+        })
+
+        return {
+            message: 'Verification code sent to email',
+        };
+    };
+
+
+    async verifyOtp(email: string, otp: string) {
+        const finduser = await this.prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        if (!finduser) throw new NotFoundException("User Not Valid");
+
+        if (!finduser.otp) throw new HttpException("please first sent a otp in your email", 400)
+
+        const verifyOtp = await bcrypt.compare(otp, finduser.otp as string);
+
+        if (!verifyOtp) throw new BadRequestException("Invalid Otp");
+
+        const roken = await this.JwtService.sign(
+            {
+                sub: finduser.userId,
+                email: finduser.email
+            },
+            {
+                secret: "huywrfauirruhjhqrhoqrhoqhrq3r8qrafb347895utjfghje58utjg35b6vcxx4v6b",
+                expiresIn: "10m"
+            }
+        );
+
+        await this.prisma.user.update({
+            where: { email },
+            data: { otp: null }
+        });
+
+        return {
+            message: "Otp Verifid Success",
+            token: roken
+        }
+    }
+
+
+    async resetPassword(token: string, password: string) {
+        let payload: any;
+        try {
+            payload = await this.JwtService.verify(token, {
+                secret: "huywrfauirruhjhqrhoqrhoqhrq3r8qrafb347895utjfghje58utjg35b6vcxx4v6b"
+            });
+        } catch (err) {
+            throw new UnauthorizedException("Invalid or expired token");
+        };
+
+        const hashPassword = await bcrypt.hash(password, 10);
+
+        await this.prisma.user.update({
+            where: { userId: payload.sub },
+            data: { password: hashPassword }
+        });
+
+        return {
+            message: "Password changed successfully"
+        };
     }
 
 }

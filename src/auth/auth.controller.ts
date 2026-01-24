@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ChangePasswordDto, SignInDto, SignUpDto } from './dto/user.request.dto';
+import { ChangePassword, ChangePasswordDto, ForgotPasswordDto, SignInDto, SignUpDto, verifyOtp } from './dto/user.request.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
@@ -240,6 +240,44 @@ export class AuthController {
       success: true,
       message: 'Password changed successfully',
     };
+  }
+
+
+  @Post("sent-otp")
+  @ApiOperation({
+    summary: "Send Otp In User Email"
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    const result = await this.authService.sendOtpInUserEmail(dto.email);
+
+    return {
+      success: true,
+      message: "Sent code your email",
+      data: result
+    }
+  }
+
+  @Post("verify-otp")
+  @ApiOperation({
+    summary: "Otp Verifid"
+  })
+  async otpVerify(@Body() dto: verifyOtp) {
+    const result = await this.authService.verifyOtp(dto.email, dto.otp);
+
+    return {
+      success: true,
+      message: result.message,
+      token: result.token
+    }
+  }
+
+
+  @Post("reset-password")
+  @ApiOperation({
+    summary: "Reset Password After otp verify"
+  })
+  async resetPassword(@Body() dto: ChangePassword) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 
 
