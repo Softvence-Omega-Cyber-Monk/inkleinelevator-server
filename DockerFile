@@ -1,28 +1,58 @@
-# ---------- Build Stage ----------
+# Build stage
 FROM node:20-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-RUN npm install
+COPY prisma ./prisma/
 
+# Install dependencies
+RUN npm ci
+
+# Copy source code
 COPY . .
+
+# Generate Prisma Client
 RUN npx prisma generate
+
+# Build the application
 RUN npm run build
 
+# Production stage
+FROM node:20-alpine AS production
 
-# ---------- Production Stage ----------
-FROM node:20-alpine
-
+# Set working directory
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./prisma.config.ts
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
 
-EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+# Generate Prisma Client in production
+RUN npx prisma generate
+
+# Create a non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+
+# Change ownership of the app directory
+RUN chown -R nestjs:nodejs /app
+
+# Switch to non-root user
+USER nestjs
+
+# Expose the application port
+EXPOSE 5001
+
+# Start the application
+CMD ["node", "dist/src/main.js"]
