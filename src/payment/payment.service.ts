@@ -184,7 +184,10 @@ export class PaymentService {
         const total = await this.prisma.payment.count({
             where: {
                 status: "PAID",
-                releaseStatus: "REVIEW"
+                releaseStatus: "REVIEW",
+                job: {
+                    jobStatus: "COMPLITE"
+                }
             }
         });
 
@@ -193,7 +196,10 @@ export class PaymentService {
         const result = await this.prisma.payment.findMany({
             where: {
                 status: "PAID",
-                releaseStatus: "REVIEW"
+                releaseStatus: "REVIEW",
+                job: {
+                    jobStatus: "COMPLITE"
+                }
             },
             skip: skip,
             take: limit,
