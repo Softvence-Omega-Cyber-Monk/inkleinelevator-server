@@ -26,7 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
-import { CreateJobDto, updateJobDto } from './dto/create.job.dto';
+import { CreateJobDto } from './dto/create.job.dto';
 import { AdminGuard } from 'src/guard/admin.guard';
 import { UserGuard } from 'src/guard/user.guard';
 
@@ -136,7 +136,7 @@ export class JobController {
         zipCode: { type: 'string' },
         estimatedBudget: { type: 'string' },
 
-        // 🔥 Certifications
+        // Certifications
         existingTechnicalRequirementsAndCertifications: {
           type: 'array',
           items: { type: 'string' },

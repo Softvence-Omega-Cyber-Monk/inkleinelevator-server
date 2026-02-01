@@ -495,7 +495,7 @@ export class UserService {
 
         const totalReleasedAmount = releasedPayments._sum.amount || 0;
 
-        // 🔥 90% calculation
+        //  90% calculation
         const toBeRelesed = totalReleasedAmount * 0.90;
 
 
@@ -514,10 +514,10 @@ export class UserService {
 
         const totalReleased24h = releasedLast24h._sum.amount || 0;
 
-        // 🔥 90% calculation
+        //  90% calculation
         const payout90Percent = totalReleased24h * 0.9;
 
-        // 🔥 10% platform fee
+        //  10% platform fee
         const platformFee10Percent = totalReleased24h * 0.1;
 
 

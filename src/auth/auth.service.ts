@@ -214,15 +214,35 @@ export class AuthService {
     async getMe(userId: string) {
         const user = await this.prisma.user.findUnique({
             where: {
-                userId: userId
+                userId: userId,
             }
         });
 
         if (!user) throw new NotFoundException("User Not Found");
 
+
+        const reviewStats = await this.prisma.review.aggregate({
+            where: {
+                revieweeId: user?.userId
+            },
+            _count: {
+                reviewId: true
+            },
+            _avg: {
+                rating: true
+            }
+        })
+
         const { password, refreshToken, ...rest } = user;
 
-        return rest
+        const reviewCount = reviewStats._count.reviewId;
+        const reviewAvg = reviewStats._avg.rating;
+
+        return {
+            ...rest,
+            reviewCount,
+            reviewAvg
+        }
     }
 
     async stripeElevatorAccountActive(userId: string) {
