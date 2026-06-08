@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: arafat2025/ink:latest
+    image: mahdijihad001/ink:latest
     platform: linux/amd64
     container_name: ink-app
     restart: unless-stopped
