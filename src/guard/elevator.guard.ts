@@ -10,6 +10,10 @@ export class ElevatorGuard implements CanActivate {
             throw new ForbiddenException('You do not have permission to access this route');
         }
 
+        if (user.verifidStatus !== 'VERIFID') {
+            throw new ForbiddenException('You are not verified. Please contact admin for verification');
+        }
+
         return true;
     }
 }
