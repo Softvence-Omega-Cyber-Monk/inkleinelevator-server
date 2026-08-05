@@ -103,4 +103,25 @@ Documents: ${payload.documents?.join(', ') || 'None'}
       data: contact,
     };
   }
+
+  async getAllMaintenanceRequests() {
+    return (this.prisma as any).contactMessage.findMany({
+      where: {
+        subject: {
+          startsWith: 'Elevator Maintenance Contract Request',
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async getMaintenanceRequestById(id: string) {
+    return (this.prisma as any).contactMessage.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 }
