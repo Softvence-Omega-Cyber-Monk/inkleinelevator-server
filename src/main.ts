@@ -17,7 +17,9 @@ async function bootstrap() {
   // Enable CORS
   const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5001',
     'http://localhost:5173',
+    'http://localhost:5174',
     `https://www.inkleinelevators.com`
   ];
 
