@@ -18,7 +18,11 @@ if [[ ! -f .env ]]; then
 fi
 
 echo "==> Building and starting containers"
-docker compose up -d --build --remove-orphans app
+# Replace any previous container with the same name (e.g. older compose project)
+if docker ps -a --format '{{.Names}}' | grep -qx 'ink-app'; then
+  docker rm -f ink-app >/dev/null
+fi
+docker compose up -d --build --remove-orphans --force-recreate app
 
 echo "==> Pruning dangling images"
 docker image prune -f >/dev/null
