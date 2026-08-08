@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateJobDto, updateJobDto } from './dto/create.job.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { Prisma } from '@prisma/client';
+import { MailService } from 'src/mail/mail.service';
 
 
 interface GetAllJobOptions {
@@ -26,6 +27,7 @@ export class JobService {
     constructor(
         private prisma: PrismaService,
         private cloudinaryService: CloudinaryService,
+        private mailService: MailService,
     ) { }
 
 
@@ -167,7 +169,7 @@ export class JobService {
 
 
 
-        const result = this.prisma.job.create({
+        const result = await this.prisma.job.create({
             data: {
                 userId,
                 jobTitle: dto.jobTitle,
@@ -191,9 +193,13 @@ export class JobService {
             }
         });
 
+        const user = await this.prisma.user.findUnique({
+            where: { userId }
+        });
+
         await this.prisma.nitification.create({
             data: {
-                description: `${(await result).jobTitle} Post`,
+                description: `${result.jobTitle} Post`,
                 logo: "JOB",
                 title: "Post New JOb",
                 userId: userId
@@ -207,7 +213,60 @@ export class JobService {
             }
         })
 
-        return result
+        // --- EMAIL NOTIFICATIONS ---
+
+        // 1. Send Email to Admin
+        const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'Kleinelevator@gmail.com';
+        
+        const adminHtml = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #0A1A3A; padding: 20px; text-align: center; color: #ffffff;">
+                    <h2 style="margin: 0; color: #5CE1E6;">New Job Posted</h2>
+                </div>
+                <div style="padding: 24px; background-color: #ffffff;">
+                    <p>A new job has been posted on the platform by <strong>${user?.name || 'A User'}</strong> (${user?.email || 'No email provided'}).</p>
+                    <h3 style="border-bottom: 2px solid #5CE1E6; padding-bottom: 6px; color: #0A1A3A;">Job Details</h3>
+                    <p><strong>Title:</strong> ${result.jobTitle}</p>
+                    <p><strong>Type:</strong> ${result.jobType}</p>
+                    <p><strong>Estimated Budget:</strong> ${result.estimitedBudget}</p>
+                    <p><strong>Location:</strong> ${result.address}</p>
+                    <p><strong>Description:</strong></p>
+                    <div style="background-color: #f9f9f9; padding: 12px; border-radius: 4px; border-left: 4px solid #5CE1E6;">
+                        ${result.projectDescription || 'No description provided.'}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        await this.mailService.sendMessage(
+            adminEmail,
+            `New Job Posted: ${result.jobTitle}`,
+            adminHtml
+        );
+
+        // 2. Send Email to User
+        if (user && user.email) {
+            const userHtml = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #0A1A3A; padding: 20px; text-align: center; color: #ffffff;">
+                        <h2 style="margin: 0; color: #5CE1E6;">Job Posted Successfully</h2>
+                    </div>
+                    <div style="padding: 24px; background-color: #ffffff;">
+                        <p>Hi <strong>${user.name || 'User'}</strong>,</p>
+                        <p>Your job <strong>"${result.jobTitle}"</strong> has been successfully posted on Inkleinelevator.</p>
+                        <p>Contractors will now be able to see your job and submit their bids.</p>
+                        <p>Thank you for using our platform!</p>
+                    </div>
+                </div>
+            `;
+            await this.mailService.sendMessage(
+                user.email,
+                `Job Posted Successfully: ${result.jobTitle}`,
+                userHtml
+            );
+        }
+
+        return result;
 
     }
 
