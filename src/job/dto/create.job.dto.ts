@@ -22,7 +22,8 @@ export class CreateJobDto {
     @IsString()
     projectDescription: string;
 
-    @ApiProperty({ type: [String] })
+    @ApiPropertyOptional({ type: [String] })
+    @IsOptional()
     @IsArray()
     @IsString({ each: true })
     @Transform(({ value }) => {
@@ -35,45 +36,54 @@ export class CreateJobDto {
         }
         return value;
     })
-    technicalRequirementsAndCertifications: string[];
+    technicalRequirementsAndCertifications?: string[];
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    elevatorType: string;
+    elevatorType?: string;
 
-    @ApiProperty({ example: 1 })
+    @ApiPropertyOptional({ example: 1 })
+    @IsOptional()
     @Type(() => Number)
     @IsInt()
     @Min(0)
-    numberOfElevator: number;
+    numberOfElevator?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    capacity: string;
+    capacity?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    speed: string;
+    speed?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    address: string;
+    address?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    streetAddress: string;
+    streetAddress?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    city: string;
+    city?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    zipCode: string;
+    zipCode?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    estimatedBudget: string;
+    estimatedBudget?: string;
 }
 
 
@@ -97,6 +107,16 @@ export class updateJobDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return [value];
+            }
+        }
+        return value;
+    })
     technicalRequirementsAndCertifications?: string[];
 
     @ApiPropertyOptional({ example: 'Hydraulic' })
