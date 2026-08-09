@@ -176,18 +176,18 @@ export class JobService {
                 jobType: dto.jobType,
                 projectDescription: dto.projectDescription,
                 technicalRequermentAndCertification:
-                    dto.technicalRequirementsAndCertifications,
+                    dto.technicalRequirementsAndCertifications || [],
 
-                elevatorType: dto.elevatorType,
-                numberOfElevator: dto.numberOfElevator,
-                capasity: dto.capacity,
-                speed: dto.speed,
-                address: dto.address,
-                streetAddress: dto.streetAddress,
-                city: dto.city,
-                zipCode: dto.zipCode,
+                elevatorType: dto.elevatorType || "",
+                numberOfElevator: dto.numberOfElevator || 0,
+                capasity: dto.capacity || "",
+                speed: dto.speed || "",
+                address: dto.address || "",
+                streetAddress: dto.streetAddress || "",
+                city: dto.city || "",
+                zipCode: dto.zipCode || "",
 
-                estimitedBudget: dto.estimatedBudget,
+                estimitedBudget: dto.estimatedBudget || "",
                 photo: photoUrls,
                 documents: documentUrls,
             }
