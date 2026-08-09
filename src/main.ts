@@ -17,26 +17,46 @@ async function bootstrap() {
   // Enable CORS
   const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5000',
     'http://localhost:5001',
     'http://localhost:5173',
     'http://localhost:5174',
-    `https://www.inkleinelevators.com`,
-    `https://inkleinelevators.com`,
-    "https://www.inkleinelevators.com/",
-    "https://inkleinelevators.com/"
+    'https://www.inkleinelevators.com',
+    'https://inkleinelevators.com',
+    'https://api.inkleinelevators.com',
   ];
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const cleanOrigin = origin.replace(/\/$/, '');
+      const isAllowed =
+        allowedOrigins.includes(cleanOrigin) ||
+        cleanOrigin.endsWith('.inkleinelevators.com') ||
+        cleanOrigin === 'https://inkleinelevators.com';
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(null, false);
       }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Allow-Headers',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
   });
 
 
