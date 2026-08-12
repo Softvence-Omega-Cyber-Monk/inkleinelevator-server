@@ -547,7 +547,7 @@ export class JobService {
 
     // };
 
-    async getSingleJobs(jobId: string) {
+    async getSingleJobs(jobId: string, user?: any) {
         const job = await this.prisma.job.findUnique({
             where: { jobId },
             include: {
@@ -610,6 +610,17 @@ export class JobService {
             };
         });
 
+        let visibleBids = bidsWithAvg;
+
+        if (job.jobStatus === 'OPEN') {
+            const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+            const isJobOwner = job.userId === user?.userId;
+
+            if (!isAdmin && !isJobOwner) {
+                visibleBids = bidsWithAvg.filter(bid => bid.userId === user?.userId);
+            }
+        }
+
         return {
             jobId: job.jobId,
             jobTitle: job.jobTitle,
@@ -636,7 +647,7 @@ export class JobService {
             acceptedConstructorBidId: job.acceptedConstructorBidId,
             totalBids: job._count.bids,
             owner: jobOwner,
-            bids: bidsWithAvg,
+            bids: visibleBids,
         };
     }
 

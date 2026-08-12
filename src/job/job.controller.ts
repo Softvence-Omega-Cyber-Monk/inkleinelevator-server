@@ -309,8 +309,8 @@ export class JobController {
   @ApiOperation({
     summary: "get Single Job"
   })
-  async getSingleJOb(@Param("jobId") jobId: string) {
-    const result = await this.jobService.getSingleJobs(jobId);
+  async getSingleJOb(@Param("jobId") jobId: string, @Req() req: any) {
+    const result = await this.jobService.getSingleJobs(jobId, req.user);
 
     return {
       success: true,
